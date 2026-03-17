@@ -1,0 +1,8 @@
+node_modules/
+*.log
+.DS_Store
+codetime.json
+test-codetime/
+
+# 只忽略源代码的 sourcemap，不需要忽略编译后的 JS
+# dist/ 目录需要提交以便用户可以直接使用
