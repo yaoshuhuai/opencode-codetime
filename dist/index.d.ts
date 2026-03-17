@@ -1,6 +1,6 @@
-export declare function activate(): void;
-export declare function deactivate(): void;
-export { CodeCounter, CountResult, DeltaResult } from './code-counter';
-export { OutputFormatter, CodeTimeData } from './output';
-export { FileWatcher, FileWatcherOptions } from './file-watcher';
+export declare const CodeTimePlugin: (ctx: {
+    directory: string;
+}) => Promise<{
+    close: () => void;
+}>;
 //# sourceMappingURL=index.d.ts.map

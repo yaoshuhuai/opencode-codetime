@@ -1,3 +1,4 @@
+import { OutputFormatter } from './output';
 export interface FileWatcherOptions {
     watchDir?: string;
     outputFile?: string;
@@ -6,10 +7,11 @@ export interface FileWatcherOptions {
 export declare class FileWatcher {
     private watcher;
     private counter;
-    private formatter;
+    formatter: OutputFormatter;
     private debounceMs;
     private debounceTimer;
     private lastResult;
+    private watchDir;
     constructor(options?: FileWatcherOptions);
     start(): void;
     private handleChange;

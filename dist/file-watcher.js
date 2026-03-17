@@ -37,24 +37,37 @@ exports.FileWatcher = void 0;
 const chokidar = __importStar(require("chokidar"));
 const code_counter_1 = require("./code-counter");
 const output_1 = require("./output");
+function normalizeWindowsPath(p) {
+    if (!p)
+        return '.';
+    if (/^\/[a-z]\//i.test(p)) {
+        return p.replace(/^\/([a-z])\//i, (m, drive) => drive.toUpperCase() + ':\\');
+    }
+    if (/^\/[a-z]:/i.test(p)) {
+        return p.replace(/^\/([a-z]:)/i, (m, drive) => drive.toUpperCase() + ':');
+    }
+    return p;
+}
 class FileWatcher {
     constructor(options = {}) {
         this.watcher = null;
         this.debounceTimer = null;
         this.lastResult = null;
-        this.counter = new code_counter_1.CodeCounter(options.watchDir || '.');
-        this.formatter = new output_1.OutputFormatter(options.outputFile || 'codetime.json');
+        const normalizedWatchDir = normalizeWindowsPath(options.watchDir || '.');
+        const normalizedOutputFile = normalizeWindowsPath(options.outputFile || 'codetime.json');
+        this.watchDir = normalizedWatchDir;
+        this.counter = new code_counter_1.CodeCounter(this.watchDir);
+        this.formatter = new output_1.OutputFormatter(normalizedOutputFile);
         this.debounceMs = options.debounceMs || 500;
     }
     start() {
         console.log('🔄 Code Time: 开始监控文件变化...');
-        // 初始统计
         this.lastResult = this.counter.countDirectory();
         this.formatter.saveToFile(this.lastResult);
         console.log(this.formatter.formatTerminal(this.lastResult));
-        this.watcher = chokidar.watch('.', {
+        this.watcher = chokidar.watch(this.watchDir, {
             ignored: [
-                /(^|[\/\\])\../, // 隐藏文件
+                /(^|[\/\\])\../,
                 '**/node_modules/**',
                 '**/dist/**',
                 '**/build/**',
@@ -63,9 +76,9 @@ class FileWatcher {
             persistent: true,
             ignoreInitial: true
         });
-        this.watcher.on('change', (path) => this.handleChange(path));
-        this.watcher.on('add', (path) => this.handleChange(path));
-        this.watcher.on('unlink', (path) => this.handleChange(path));
+        this.watcher.on('change', (p) => this.handleChange(p));
+        this.watcher.on('add', (p) => this.handleChange(p));
+        this.watcher.on('unlink', (p) => this.handleChange(p));
     }
     handleChange(filePath) {
         if (this.debounceTimer) {
@@ -77,7 +90,6 @@ class FileWatcher {
     }
     doStat() {
         const newResult = this.counter.countDirectory();
-        // 计算增量
         const delta = {
             added: newResult.totalLines - (this.lastResult?.totalLines || 0),
             deleted: 0,
